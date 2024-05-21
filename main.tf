@@ -8,18 +8,19 @@ variable "pool" {
 }
 
 module "openstack" {
-  source         = "git::https://github.com/ComputeCanada/magic_castle.git//openstack"
+  source         = "git::https://github.com/ComputeCanada/magic_castle.git//openstack?ref=13.5.0"
   config_git_url = "https://github.com/ComputeCanada/puppet-magic_castle.git"
-  config_version = "main"
+  config_version = "13.5.0"
 
-  cluster_name = "phoenix"
-  domain       = "calculquebec.cloud"
-  image        = "Rocky-8"
+  cluster_name = "pcs"
+  domain       = "ace-net.training"
+  image        = "Rocky-9.3-x64-2023-11"
 
   instances = {
-    mgmt   = { type = "p4-6gb", tags = ["puppet", "mgmt", "nfs"], count = 1 }
-    login  = { type = "p2-3gb", tags = ["login", "public", "proxy"], count = 1 }
-    node   = { type = "p2-3gb", tags = ["node"], count = 1 }
+    mgmt    = { type = "p8-12gb", tags = ["puppet", "mgmt", "nfs"], disk_size=50, count = 1 }
+    login   = { type = "p8-12gb", tags = ["login", "public", "proxy"], disk_size=50, count = 1 }
+    node16c = { type = "c16-180gb-392-avx2", tags = ["node"], count = 4 }
+    node4c1g = { image="Rocky-8.9-x64-2023-11",type = "g1-8gb-c4-22gb", tags = ["node"], count = 1 }
   }
 
   # var.pool is managed by Slurm through Terraform REST API.
@@ -36,9 +37,11 @@ module "openstack" {
     }
   }
 
-  public_keys = [file("~/.ssh/id_rsa.pub")]
+  public_keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILWHSMDMhlXIy+C7/Dw4b7dUgfZkE3AXnG8PDDkyY9Qm cgeroux@lunar"]
 
-  nb_users = 10
+  generate_ssh_key = true
+  
+  nb_users = 100
   # Shared password, randomly chosen if blank
   guest_passwd = ""
 }
@@ -51,16 +54,16 @@ output "public_ip" {
   value = module.openstack.public_ip
 }
 
-## Uncomment to register your domain name with CloudFlare
-# module "dns" {
-#   source           = "git::https://github.com/ComputeCanada/magic_castle.git//dns/cloudflare"
-#   name             = module.openstack.cluster_name
-#   domain           = module.openstack.domain
-#   bastions         = module.openstack.bastions
-#   public_instances = module.openstack.public_instances
-#   ssh_private_key  = module.openstack.ssh_private_key
-#   sudoer_username  = module.openstack.accounts.sudoer.username
-# }
+# Uncomment to register your domain name with CloudFlare
+module "dns" {
+  source           = "git::https://github.com/ComputeCanada/magic_castle.git//dns/cloudflare"
+  name             = module.openstack.cluster_name
+  domain           = module.openstack.domain
+  bastions         = module.openstack.bastions
+  public_instances = module.openstack.public_instances
+  ssh_private_key  = module.openstack.ssh_private_key
+  sudoer_username  = module.openstack.accounts.sudoer.username
+}
 
 ## Uncomment to register your domain name with Google Cloud
 # module "dns" {
@@ -75,6 +78,6 @@ output "public_ip" {
 #   sudoer_username  = module.openstack.accounts.sudoer.username
 # }
 
-# output "hostnames" {
-#   value = module.dns.hostnames
-# }
+output "hostnames" {
+  value = module.dns.hostnames
+}
