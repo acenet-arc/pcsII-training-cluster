@@ -14,7 +14,7 @@ module "openstack" {
 
   cluster_name = "pcsii"
   domain       = "ace-net.training"
-  image        = "Rocky-8.9-x64-2023-11"
+  image        = "Rocky-9.3-x64-2023-11"
 
   instances = {
     mgmt    = { type = "p8-12gb", tags = ["puppet", "mgmt", "nfs"], disk_size=50, count = 1 }
