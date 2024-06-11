@@ -46,6 +46,8 @@ module "openstack" {
 
   generate_ssh_key = true
   
+  hieradata = file("./config.yaml")
+  
   nb_users = 100
   # Shared password, randomly chosen if blank
   guest_passwd = ""
