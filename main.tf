@@ -46,7 +46,7 @@ module "openstack" {
 
   generate_ssh_key = true
   
-  hieradata = file("./config.yaml")
+  hieradata = file("./config.yml")
   
   nb_users = 100
   # Shared password, randomly chosen if blank
